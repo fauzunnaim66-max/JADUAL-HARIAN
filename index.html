@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="app-version" content="1.1.0">
+<title>Elite Discipline Planner</title>
+
+<style>
+:root{
+  --bg:#020617;
+  --card:#0b1220;
+  --border:rgba(255,255,255,.08);
+  --white:#f8fafc;
+  --muted:#9ca3af;
+  --green:#22c55e;
+  --blue:#60a5fa;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto;
+  background:radial-gradient(circle at top,#020617,#000 60%);
+  color:var(--white);
+}
+
+/* ===== HEADER ===== */
+header{
+  padding:22px 14px;
+  text-align:center;
+}
+.logo-bar{
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  margin-bottom:12px;
+}
+.logo{
+  width:66px;height:66px;
+  border-radius:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:2.2rem;
+  background:linear-gradient(145deg,#0b1220,#020617);
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 18px 40px rgba(0,0,0,.7);
+}
+.logo.dumbbell{color:var(--green)}
+.logo.work{color:var(--blue)}
+.logo.time{color:#facc15}
+
+header h1{margin:6px 0 4px;font-size:1.25rem}
+header p{margin:0;font-size:.85rem;color:var(--muted)}
+
+.container{padding:14px}
+
+/* ===== STATS ===== */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+  margin-bottom:18px;
+}
+.stat-card{
+  background:linear-gradient(180deg,#0b1220,#020617);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:14px 12px;
+  box-shadow:0 12px 28px rgba(0,0,0,.6);
+}
+.stat-title{font-size:.75rem;color:var(--muted)}
+.stat-value{font-size:1.4rem;font-weight:700;margin-top:4px}
+.stat-green{color:var(--green)}
+.stat-blue{color:var(--blue)}
+
+/* ===== GRID ===== */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+.card{
+  background:linear-gradient(180deg,#0b1220,#020617);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:18px 10px;
+  text-align:center;
+  font-size:.9rem;
+  box-shadow:0 14px 32px rgba(0,0,0,.6);
+  transition:.25s;
+}
+.card:active{transform:scale(.96)}
+
+/* ===== TABLE ===== */
+.table-wrap{
+  background:linear-gradient(180deg,#0b1220,#020617);
+  border:1px solid var(--border);
+  border-radius:18px;
+  overflow:hidden;
+  box-shadow:0 16px 36px rgba(0,0,0,.65);
+}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{padding:10px 8px;border-bottom:1px solid var(--border)}
+th{background:rgba(255,255,255,.04);font-weight:600}
+tr:last-child td{border-bottom:none}
+
+/* ===== CHECK ===== */
+.school-check{
+  width:22px;height:22px;
+  border-radius:7px;
+  border:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.school-check.done{
+  background:linear-gradient(145deg,#22c55e,#16a34a);
+  border-color:#22c55e;
+}
+
+/* ===== BACK ===== */
+.back{margin:14px 0;text-align:center;font-size:.85rem;color:var(--blue)}
+
+/* ===== BUBBLE ===== */
+.bubble{
+  position:fixed;
+  width:20px;height:20px;
+  border-radius:50%;
+  background:radial-gradient(circle,var(--green),transparent 70%);
+  animation:bubblePop 1.3s ease-out forwards;
+  pointer-events:none;
+  z-index:9999;
+}
+@keyframes bubblePop{
+  0%{transform:scale(0);opacity:0}
+  30%{transform:scale(1.2);opacity:1}
+  70%{transform:scale(1.8);opacity:.9}
+  100%{transform:scale(2.4);opacity:0}
+}
+
+/* ===== FIREWORK ===== */
+.firework{
+  position:fixed;
+  width:8px;height:8px;
+  border-radius:50%;
+  animation:firework 2s cubic-bezier(.2,.8,.2,1) forwards;
+  pointer-events:none;
+  z-index:9999;
+}
+@keyframes firework{
+  0%{transform:translateY(0) scale(.8);opacity:0}
+  30%{opacity:1}
+  70%{transform:translateY(-120px) scale(1);opacity:.9}
+  100%{transform:translateY(-200px) scale(.3);opacity:0}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo-bar">
+    <div class="logo dumbbell">🏋️</div>
+    <div class="logo work">👔</div>
+    <div class="logo time">⏱️</div>
+  </div>
+  <h1>Elite Discipline Planner</h1>
+  <p>Hitam • Disiplin • Konsisten • Premium</p>
+</header>
+
+<div class="container">
+  <div id="stats" class="stats"></div>
+  <div id="app"></div>
+</div>
+
+<script>
+const APP_VERSION="1.1.0";
+const YEAR=2026;
+const STORAGE_PREFIX="elite_planner";
+const app=document.getElementById("app");
+
+/* DATA */
+const months=[
+"Januari","Februari","Mac","April","Mei","Jun",
+"Julai","Ogos","September","Oktober","November","Disember"
+];
+
+const schedule=[
+["08:00 – 09:30","Kerja"],
+["09:30 – 10:00","Makan pagi"],
+["10:00 – 12:50","Kerja"],
+["12:50 – 14:00","Makan / Zuhur"],
+["14:00 – 16:50","Kerja"],
+["16:50 – 17:30","Asar"],
+["17:30 – 18:00","Sukan / Dumbbell"],
+["18:00 – 19:30","Mandi / Maghrib / Isyak"],
+["21:00 – 21:30","Makan malam"],
+["21:30 – 22:30","Dumbbell ringan"],
+["23:20","Tidur"]
+];
+
+/* STORAGE */
+function key(y,m,d){return `${STORAGE_PREFIX}_${y}_${m}_${d}`}
+function saveDay(y,m,d){
+  const data=[...document.querySelectorAll(".school-check")]
+    .map(c=>c.classList.contains("done"));
+  localStorage.setItem(key(y,m,d),JSON.stringify(data));
+}
+function loadDay(y,m,d){
+  return JSON.parse(localStorage.getItem(key(y,m,d))||"null");
+}
+
+/* STATS */
+function calcStats(){
+  let full=0,active=0;
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k.startsWith(STORAGE_PREFIX+"_"+YEAR)){
+      const v=JSON.parse(localStorage.getItem(k));
+      if(v.some(x=>x)) active++;
+      if(v.every(x=>x)) full++;
+    }
+  }
+  let streak=0;
+  for(let i=0;i<365;i++){
+    const d=new Date();d.setDate(d.getDate()-i);
+    if(d.getFullYear()!==YEAR) break;
+    const v=loadDay(YEAR,d.getMonth(),d.getDate());
+    if(v&&v.every(x=>x)) streak++; else break;
+  }
+  return{full,active,streak};
+}
+function renderStats(){
+  const s=calcStats();
+  document.getElementById("stats").innerHTML=`
+    <div class="stat-card">
+      <div class="stat-title">Hari Lengkap</div>
+      <div class="stat-value stat-green">${s.full}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-title">Hari Aktif</div>
+      <div class="stat-value stat-blue">${s.active}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-title">Streak Semasa</div>
+      <div class="stat-value stat-green">🔥 ${s.streak}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-title">Tahun</div>
+      <div class="stat-value">${YEAR}</div>
+    </div>
+  `;
+}
+
+/* UI */
+function showMonths(){
+  app.innerHTML=`<div class="grid">
+    ${months.map((m,i)=>`
+      <div class="card" onclick="showDays(${i})">${m}</div>
+    `).join("")}
+  </div>`;
+}
+function showDays(m){
+  const days=new Date(YEAR,m+1,0).getDate();
+  app.innerHTML=`
+    <div class="back" onclick="showMonths()">← Kembali ke bulan</div>
+    <div class="grid">
+      ${Array.from({length:days},(_,i)=>`
+        <div class="card" onclick="showDay(${m},${i+1})">Hari ${i+1}</div>
+      `).join("")}
+    </div>`;
+}
+function showDay(m,d){
+  const saved=loadDay(YEAR,m,d);
+  app.innerHTML=`
+    <div class="back" onclick="showDays(${m})">← Kembali ke hari</div>
+    <div class="table-wrap">
+      <table>
+        <tr><th>Masa</th><th>Aktiviti</th><th>✔</th></tr>
+        ${schedule.map((s,i)=>`
+          <tr onclick="toggleRow(this,event,${m},${d})">
+            <td>${s[0]}</td>
+            <td>${s[1]}</td>
+            <td><div class="school-check ${saved&&saved[i]?"done":""}"></div></td>
+          </tr>
+        `).join("")}
+      </table>
+    </div>`;
+}
+
+/* ACTION */
+function toggleRow(row,e,m,d){
+  row.querySelector(".school-check").classList.toggle("done");
+  bubble(e.clientX,e.clientY);
+  saveDay(YEAR,m,d);
+  renderStats();
+  if([...document.querySelectorAll(".school-check")].every(c=>c.classList.contains("done")))
+    firework();
+}
+
+/* EFFECT */
+function bubble(x,y){
+  const b=document.createElement("div");
+  b.className="bubble";b.style.left=x+"px";b.style.top=y+"px";
+  document.body.appendChild(b);setTimeout(()=>b.remove(),1300);
+}
+function firework(){
+  for(let i=0;i<40;i++){
+    setTimeout(()=>{
+      const f=document.createElement("div");
+      f.className="firework";
+      f.style.left=(50+Math.random()*24-12)+"vw";
+      f.style.top="70vh";
+      f.style.background=["#22c55e","#16a34a","#60a5fa","#2563eb","#facc15"]
+        [Math.floor(Math.random()*5)];
+      document.body.appendChild(f);
+      setTimeout(()=>f.remove(),2000);
+    },i*45);
+  }
+}
+
+renderStats();
+showMonths();
+</script>
+
+</body>
+</html>
